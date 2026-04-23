@@ -4,7 +4,7 @@ Análisis geoespacial en R de la interacción amenaza-exposición en áreas silv
 
 ## Estructura
 
-```
+```text
 ├── docker-compose.yml / Dockerfile   # entorno R + RStudio Server + stack geoespacial
 ├── .env.example                      # plantilla de variables de entorno
 ├── data/{raw,processed,external}/    # datos (no versionados)
@@ -57,12 +57,14 @@ Los archivos editados, datos descargados y outputs persisten en el host (bind-mo
 
 Dos rutas posibles si eventualmente se quiere correr el análisis desde Windows:
 
-**A. Docker Desktop + WSL2** (mismo contenedor que en Linux)
+### A. Docker Desktop + WSL2 (mismo contenedor que en Linux)
+
 1. Instalar Docker Desktop con backend WSL2.
 2. Clonar el repositorio dentro de WSL o del filesystem Windows.
 3. `docker compose up -d --build` y abrir `http://localhost:8787`.
 
-**B. R for Windows nativo**
+### B. R for Windows nativo
+
 1. Instalar [R ≥ 4.5](https://cran.r-project.org/bin/windows/base/) y [Rtools45](https://cran.r-project.org/bin/windows/Rtools/).
 2. Clonar el repositorio, abrir `asp-black-summer.Rproj` en RStudio.
 3. Ejecutar `renv::restore()`. Los paquetes geoespaciales (`sf`, `terra`, `stars`) se instalan como binarios pre-compilados desde CRAN — no hace falta GDAL/PROJ del sistema.
@@ -71,14 +73,14 @@ Dos rutas posibles si eventualmente se quiere correr el análisis desde Windows:
 
 Todas las fuentes son oficiales y de licencia abierta (CC-BY 4.0 salvo indicación). Se acreditan en cada mapa y en el reporte Quarto.
 
-| Capa | Fuente | Estructura (Miklós et al. 2019) |
-|------|--------|---------------------------------|
-| Perímetros Black Summer | NIAFED — DCCEEW | Amenaza |
-| Severidad FESM 2019/20 | NSW SEED | Amenaza |
-| Áreas protegidas | CAPAD 2020 Terrestrial — DCCEEW | Estructura terciaria (normativa) |
-| Vegetación mayor (MVG) | NVIS v7.0 — DCCEEW | Estructura secundaria |
-| Relieve | GA 1-second DEM | Estructura primaria |
-| Límite estatal | ABS ASGS Ed.3 | Administrativo |
+| Capa                    | Fuente                           | Estructura (Miklós et al. 2019)   |
+| ----------------------- | -------------------------------- | --------------------------------- |
+| Perímetros Black Summer | NIAFED — DCCEEW                  | Amenaza                           |
+| Severidad FESM 2019/20  | NSW SEED                         | Amenaza                           |
+| Áreas protegidas        | CAPAD 2020 Terrestrial — DCCEEW  | Estructura terciaria (normativa)  |
+| Vegetación mayor (MVG)  | NVIS v7.0 — DCCEEW               | Estructura secundaria             |
+| Relieve                 | GA 1-second DEM                  | Estructura primaria               |
+| Límite estatal          | ABS ASGS Ed.3                    | Administrativo                    |
 
 Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer Nature.
 

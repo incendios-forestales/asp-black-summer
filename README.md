@@ -2,7 +2,8 @@
 
 Análisis geoespacial en R de la interacción amenaza-exposición en áreas silvestres protegidas (ASP) de Nueva Gales del Sur, Australia, durante el evento "Black Summer" 2019-2020.
 
-**Ver productos en línea:** <https://incendios-forestales.github.io/asp-black-summer/> — reporte Quarto, mapas interactivos (Leaflet) y estáticos, sin necesidad de clonar ni instalar R.
+**Productos en línea:**  
+<https://incendios-forestales.github.io/asp-black-summer/>
 
 ## Estructura
 

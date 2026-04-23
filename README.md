@@ -2,8 +2,6 @@
 
 Análisis geoespacial en R de la interacción amenaza-exposición en áreas silvestres protegidas (ASP) de Nueva Gales del Sur, Australia, durante el evento "Black Summer" 2019-2020.
 
-Los PDFs de referencia (tema y delimitación del problema) están en `data/external/`.
-
 ## Estructura
 
 ```

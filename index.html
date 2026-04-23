@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amenaza y exposición en ASP de NSW — Black Summer 2019-2020</title>
+  <style>
+    :root {
+      --fg: #1a1a1a;
+      --muted: #555;
+      --accent: #b33;
+      --bg: #fafafa;
+      --card: #fff;
+      --border: #e2e2e2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--fg);
+      background: var(--bg);
+      margin: 0;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    h1 {
+      font-size: 1.7rem;
+      line-height: 1.2;
+      margin: 0 0 0.4rem;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 2.2rem;
+      margin-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+    }
+    p { margin: 0.6rem 0; }
+    .lead {
+      font-size: 1.02rem;
+      margin-bottom: 1.5rem;
+    }
+    ul.products {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.7rem;
+    }
+    ul.products li {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+    }
+    ul.products a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    ul.products a:hover { text-decoration: underline; }
+    ul.products .desc {
+      display: block;
+      color: var(--muted);
+      font-size: 0.87rem;
+      margin-top: 0.2rem;
+      font-weight: 400;
+    }
+    .repo-link {
+      margin-top: 2.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .repo-link a { color: var(--accent); }
+    code {
+      background: #eee;
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Amenaza y exposición en áreas protegidas de NSW</h1>
+    <div class="subtitle">Evento <em>Black Summer</em> 2019-2020 — Nueva Gales del Sur, Australia</div>
+
+    <p class="lead">
+      Análisis geoespacial en R de la interacción amenaza-exposición en áreas silvestres protegidas (ASP) de Nueva Gales del Sur durante el evento <em>Black Summer</em>. Los productos a continuación se pueden abrir directamente en el navegador.
+    </p>
+
+    <h2>Reporte principal</h2>
+    <ul class="products">
+      <li>
+        <a href="analysis/01_exploracion_nsw.html">Exploración NSW — reporte Quarto</a>
+        <span class="desc">Mapas, tabla cruzada IUCN × amenaza × exposición y notas metodológicas en un solo documento.</span>
+      </li>
+    </ul>
+
+    <h2>Mapas interactivos (Leaflet)</h2>
+    <ul class="products">
+      <li>
+        <a href="outputs/maps/01_contexto_asp_iucn.html">1. Contexto ASP por IUCN</a>
+        <span class="desc">Áreas silvestres protegidas de NSW por categoría IUCN (CAPAD 2020).</span>
+      </li>
+      <li>
+        <a href="outputs/maps/02_amenaza_niafed.html">2. Amenaza — perímetros Black Summer</a>
+        <span class="desc">Perímetros de incendios 2019-2020 (NIAFED) sobre NSW.</span>
+      </li>
+      <li>
+        <a href="outputs/maps/03_interseccion_amenaza_exposicion.html">3. Intersección amenaza × exposición</a>
+        <span class="desc">ASP afectadas por los perímetros Black Summer.</span>
+      </li>
+    </ul>
+
+    <h2>Mapas estáticos (PNG)</h2>
+    <ul class="products">
+      <li>
+        <a href="outputs/figs/01_contexto_asp_iucn.png">1. Contexto ASP por IUCN</a>
+      </li>
+      <li>
+        <a href="outputs/figs/02_amenaza_niafed.png">2. Amenaza NIAFED</a>
+      </li>
+      <li>
+        <a href="outputs/figs/03_interseccion_amenaza_exposicion.png">3. Intersección amenaza × exposición</a>
+      </li>
+      <li>
+        <a href="outputs/figs/04_estructura_secundaria_nvis.png">4. Estructura secundaria — NVIS MVG</a>
+      </li>
+      <li>
+        <a href="outputs/figs/05_severidad_fesm.png">5. Severidad FESM 2019/20</a>
+      </li>
+    </ul>
+
+    <h2>Tabla cruzada IUCN × amenaza × exposición</h2>
+    <ul class="products">
+      <li>
+        <a href="outputs/tabla_iucn_amenaza_exposicion.html">Ver tabla (HTML)</a>
+        <span class="desc">También disponible como <code>outputs/tabla_iucn_amenaza_exposicion.csv</code> en el repositorio.</span>
+      </li>
+    </ul>
+
+    <p class="repo-link">
+      Código y pipeline reproducible: <a href="https://github.com/incendios-forestales/asp-black-summer">github.com/incendios-forestales/asp-black-summer</a>
+    </p>
+  </main>
+</body>
+</html>

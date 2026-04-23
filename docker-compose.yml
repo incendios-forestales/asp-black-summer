@@ -1,0 +1,25 @@
+name: asp-black-summer
+services:
+  rstudio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: asp-black-summer:local
+    container_name: asp-black-summer-rstudio
+    ports:
+      - "8787:8787"
+    environment:
+      PASSWORD: ${RSTUDIO_PASSWORD:-rstudio}
+      USER: rstudio
+      USERID: 1000
+      GROUPID: 1000
+      ROOT: "true"
+      DISABLE_AUTH: "false"
+    volumes:
+      - .:/home/rstudio/project
+      - renv-cache:/home/rstudio/.cache/R/renv
+    working_dir: /home/rstudio/project
+    restart: unless-stopped
+
+volumes:
+  renv-cache:

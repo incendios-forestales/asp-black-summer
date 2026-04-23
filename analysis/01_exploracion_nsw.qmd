@@ -1,0 +1,198 @@
+---
+title: "Amenaza y exposición en ASP de NSW — Black Summer 2019-2020"
+subtitle: "Mapas exploratorios"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    embed-resources: true
+    theme: cosmo
+lang: es
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(here)
+library(sf)
+library(terra)
+library(tmap)
+library(dplyr)
+
+source(here("R", "utils_geo.R"))
+
+dir_processed <- here("data", "processed")
+
+load_if_exists <- function(path, reader = sf::st_read) {
+  if (!file.exists(path)) return(NULL)
+  reader(path, quiet = TRUE)
+}
+
+nsw    <- load_if_exists(file.path(dir_processed, "nsw_boundary.gpkg"))
+niafed <- load_if_exists(file.path(dir_processed, "nsw_niafed_black_summer.gpkg"))
+capad  <- load_if_exists(file.path(dir_processed, "nsw_capad_2020.gpkg"))
+nvis   <- if (file.exists(file.path(dir_processed, "nsw_nvis_mvg.tif")))
+            terra::rast(file.path(dir_processed, "nsw_nvis_mvg.tif")) else NULL
+fesm   <- if (file.exists(file.path(dir_processed, "nsw_fesm_severity.tif")))
+            terra::rast(file.path(dir_processed, "nsw_fesm_severity.tif")) else NULL
+
+# Simplificación ligera para pintar rápido en tmap plot-mode
+simplify_for_plot <- function(x, keep = 0.10) {
+  if (is.null(x)) return(NULL)
+  rmapshaper::ms_simplify(x, keep = keep, keep_shapes = TRUE)
+}
+capad_s  <- simplify_for_plot(capad,  keep = 0.10)
+niafed_s <- simplify_for_plot(niafed, keep = 0.15)
+
+tmap::tmap_mode("plot")
+```
+
+## Contexto
+
+Este reporte explora la **interacción entre la amenaza de mega-incendios y la exposición de áreas silvestres protegidas (ASP)** en Nueva Gales del Sur, Australia, durante el evento *Black Summer* (julio 2019 – marzo 2020). Sigue el marco de Miklós et al. (2019) de estructuras del paisaje: primaria (abiótica), secundaria (vegetación/combustible) y terciaria (normativa / áreas protegidas).
+
+Las cinco figuras siguientes son mapas estáticos. Las versiones **interactivas** (Leaflet, hover/zoom) están en archivos separados bajo `outputs/maps/` — mucho más ligeros individualmente que embebidos en este reporte:
+
+- [`01_contexto_asp_iucn.html`](../outputs/maps/01_contexto_asp_iucn.html)
+- [`02_amenaza_niafed.html`](../outputs/maps/02_amenaza_niafed.html)
+- [`03_interseccion_amenaza_exposicion.html`](../outputs/maps/03_interseccion_amenaza_exposicion.html)
+
+(Los mapas 4 y 5 son rásters demasiado grandes para Leaflet; solo versión estática.)
+
+## Mapa 1 — Contexto: ASP de NSW por categoría IUCN
+
+```{r mapa-1}
+#| fig-cap: "Áreas silvestres protegidas de NSW según CAPAD 2020, coloreadas por categoría IUCN."
+#| fig-width: 10
+#| fig-height: 8
+if (!is.null(nsw) && !is.null(capad_s)) {
+  tm_shape(nsw) + tm_borders() +
+    tm_shape(capad_s) + tm_polygons(fill = "IUCN",
+                                     fill.legend = tm_legend(title = "IUCN"))
+} else {
+  knitr::asis_output("_Datos faltantes._")
+}
+```
+
+## Mapa 2 — Amenaza: Black Summer en NSW
+
+```{r mapa-2}
+#| fig-cap: "Extensión agregada del evento Black Summer 2019-2020 en NSW (NIAFED v20200623, recortado al estado)."
+#| fig-width: 10
+#| fig-height: 8
+if (!is.null(nsw) && !is.null(niafed_s)) {
+  tm_shape(nsw) + tm_borders() +
+    tm_shape(niafed_s) + tm_polygons(fill = "firebrick", fill_alpha = 0.7)
+} else {
+  knitr::asis_output("_Datos faltantes._")
+}
+```
+
+## Mapa 3 — Intersección amenaza × exposición
+
+```{r mapa-3}
+#| fig-cap: "Superposición visual CAPAD (verde) ↔ Black Summer (rojo). Las áreas donde se mezclan los colores ilustran directamente el problema central."
+#| fig-width: 10
+#| fig-height: 8
+if (!is.null(nsw) && !is.null(capad_s) && !is.null(niafed_s)) {
+  tm_shape(nsw) + tm_borders() +
+    tm_shape(capad_s) + tm_polygons(fill = "forestgreen", fill_alpha = 0.40) +
+    tm_shape(niafed_s) + tm_polygons(fill = "firebrick", fill_alpha = 0.55)
+} else {
+  knitr::asis_output("_Faltan capas._")
+}
+```
+
+## Mapa 4 — Estructura secundaria: vegetación (NVIS MVG)
+
+```{r mapa-4}
+#| fig-cap: "Grupos mayores de vegetación (NVIS v7.0) en NSW. Los eucaliptos dominantes (MVG 2-5, 11) son el combustible clave referido por Barker et al. (2022)."
+#| fig-width: 10
+#| fig-height: 8
+if (!is.null(nsw) && !is.null(nvis)) {
+  tm_shape(nvis) +
+    tm_raster(col.scale = tm_scale_categorical(n.max = 33),
+              col.legend = tm_legend(title = "MVG")) +
+    tm_shape(nsw) + tm_borders()
+} else {
+  knitr::asis_output("_Datos faltantes._")
+}
+```
+
+## Mapa 5 — Severidad: FESM 2019/20
+
+```{r mapa-5}
+#| fig-cap: "Severidad FESM (5 clases, 10 m Sentinel-2 agregado a 100 m) del evento Black Summer en NSW."
+#| fig-width: 10
+#| fig-height: 8
+if (!is.null(nsw) && !is.null(fesm)) {
+  tm_shape(fesm) +
+    tm_raster(col.scale = tm_scale_categorical(
+                values = c("#d9d9d9","#ffeda0","#feb24c","#fc4e2a","#800026")),
+              col.legend = tm_legend(title = "Severidad")) +
+    tm_shape(nsw) + tm_borders()
+} else {
+  knitr::asis_output("_Datos faltantes._")
+}
+```
+
+## Tabla cruzada — IUCN × amenaza × exposición
+
+Por cada categoría IUCN en NSW: área total, hectáreas quemadas durante Black Summer 2019-2020, proporción quemada, severidad modal (sobre el área quemada, excluyendo NoData), distribución porcentual de clases de severidad, y grupo de vegetación dominante (NVIS MVG).
+
+```{r tabla-iucn}
+csv_path <- here("outputs", "tabla_iucn_amenaza_exposicion.csv")
+if (file.exists(csv_path)) {
+  tabla <- readr::read_csv(csv_path, show_col_types = FALSE)
+  tabla |>
+    dplyr::mutate(dplyr::across(c(`Área (ha)`, `Quemado (ha)`),
+                                 ~ formatC(round(.x), format = "d", big.mark = ","))) |>
+    knitr::kable(caption = "NSW · ASP por categoría IUCN × Black Summer 2019-2020") |>
+    kableExtra::kable_styling(
+      bootstrap_options = c("striped","hover","condensed"),
+      full_width = FALSE, position = "left"
+    )
+} else {
+  knitr::asis_output("_Tabla no disponible. Ejecute `scripts/04_estadisticas_iucn.R` primero._")
+}
+```
+
+Lectura del patrón observado — sujeta a validación disciplinar (la tabla es exploratoria, no inferencial):
+
+- **Ib (Wilderness)** y **II (National Park)** — las categorías más estrictas/pasivas — concentran el 79 % y el 21 % de sus áreas quemadas. Es el patrón que anticiparía la hipótesis de *conservación pasiva → acumulación de combustible → mayor exposición*.
+- **VI (Sustainable Use)**, donde el manejo activo está explícitamente permitido, muestra una exposición marginal (0.2 %).
+- Severidad modal **Extrema** en Ia, II y III; **Moderada** en IV y VI; **Alta** en V. La severidad extrema se concentra en las categorías restrictivas.
+
+## Sanity checks
+
+```{r checks}
+if (!is.null(niafed)) {
+  ha <- as.numeric(sum(sf::st_area(niafed))) / 1e4
+  cat(sprintf("NIAFED NSW Black Summer: %s features, %s ha totales (~%s km²).\n",
+              nrow(niafed), format(round(ha), big.mark = ","),
+              format(round(ha/100), big.mark = ",")))
+}
+if (!is.null(capad)) {
+  cat(sprintf("CAPAD 2020 NSW: %s features.\n", nrow(capad)))
+}
+```
+
+## Fuentes de datos
+
+- **NIAFED v20200623** — DCCEEW (CC-BY 4.0). Portal: https://fed.dcceew.gov.au/datasets/erin::national-indicative-aggregated-fire-extent-dataset
+- **CAPAD 2020 Terrestrial** — DCCEEW (CC-BY 4.0). Portal: https://fed.dcceew.gov.au/datasets/18fa96882848426cb1b778703f8137ab
+- **NVIS v7.0 MVG Extant** — DCCEEW (CC-BY 4.0).
+- **NSW FESM 2019/20** — NSW DPE & RFS (CC-BY 4.0). Portal: https://datasets.seed.nsw.gov.au/dataset/fire-extent-and-severity-mapping-fesm-2019-20
+- **ABS ASGS Ed.3** — Australian Bureau of Statistics (CC-BY 4.0).
+
+## Referencias
+
+- Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer Nature.
+- Nolan, R. H. et al. (2020). Causes and consequences of eastern Australia's 2019–20 season of mega-fires. *Global Change Biology*, 26(3).
+- Linley, G. D. et al. (2022). What do you mean, 'megafire'? *Global Ecology and Biogeography*.
+- Barker, J. W., Price, O. F., & Jenkins, M. E. (2022). High severity fire promotes a more flammable eucalypt forest structure. *Austral Ecology*.
+- Driscoll, D. A. et al. (2024). Biodiversity impacts of the 2019–2020 Australian megafires. *Nature*.
+- Resco de Dios, V. et al. (2025). Protected areas as hotspots of wildfire activity. *Journal of Environmental Management*.

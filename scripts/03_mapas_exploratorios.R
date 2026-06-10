@@ -6,6 +6,8 @@
 # Convención: mapas vectoriales se exportan en PNG (plot) + HTML (view).
 # Mapas que contienen ráster se exportan SOLO en PNG: un raster nacional a 100 m
 # (NVIS, FESM agregado) excede el límite de imagen que Leaflet embebe en HTML.
+# Excepción: el Mapa 6 está enmascarado a las ASP y se agrega a resolución más
+# gruesa para la vista interactiva, por lo que sí se exporta también en HTML.
 
 suppressPackageStartupMessages({
   library(here)
@@ -146,19 +148,26 @@ reclass_eucalipto <- function(r) {
   veg
 }
 
-# Mapa 6: presencia de eucalipto DENTRO de las ASP — SOLO PNG
+# Mapa 6: presencia de eucalipto DENTRO de las ASP — PNG + HTML
 # El ráster reclasificado se recorta y enmascara a los polígonos CAPAD, de modo
 # que solo se ve la vegetación de eucalipto que cae en áreas protegidas. El
 # perímetro Black Summer (rojo) se superpone para leer el solape combustible↔fuego.
+# Reaplica las categorías tras una operación de terra que las descarta (modal).
+set_euc_levels <- function(r) {
+  levels(r) <- data.frame(value = c(1, 2),
+                          clase = c("Eucalipto esclerófilo", "Mallee (eucalipto)"))
+  r
+}
 if (!is.null(nsw) && !is.null(capad) && !is.null(nvis)) {
-  tmap::tmap_mode("plot")
   veg_euc <- reclass_eucalipto(nvis)
   capad_v <- terra::project(terra::vect(capad), veg_euc)
   veg_asp <- terra::mask(terra::crop(veg_euc, capad_v), capad_v)
+  euc_pal <- c("#1b7837", "#b8a038")
+
+  tmap::tmap_mode("plot")
   m6 <- tmap::tm_shape(nsw) + tmap::tm_borders(col = "grey60") +
         tmap::tm_shape(veg_asp) +
-          tmap::tm_raster(col.scale = tmap::tm_scale_categorical(
-                            values = c("#1b7837", "#b8a038")),
+          tmap::tm_raster(col.scale = tmap::tm_scale_categorical(values = euc_pal),
                           col.legend = tmap::tm_legend(title = "Eucalipto en ASP")) +
         tmap::tm_shape(capad) + tmap::tm_borders(col = "grey30", lwd = 0.3)
   if (!is.null(niafed)) {
@@ -171,6 +180,22 @@ if (!is.null(nsw) && !is.null(capad) && !is.null(nvis)) {
   }
   m6 <- m6 + tmap::tm_title("Eucalipto en ASP de NSW (NVIS MVG) y perímetro Black Summer")
   save_png(m6, "06_eucalipto_en_asp")
+
+  # Versión interactiva: el ráster enmascarado se agrega (modal, factor 5 ≈ 500 m)
+  # para que el overlay de imagen que Leaflet embebe en el HTML quede liviano.
+  tmap::tmap_mode("view")
+  veg_view <- set_euc_levels(terra::aggregate(veg_asp, fact = 5, fun = "modal",
+                                              na.rm = TRUE))
+  m6_view <- tmap::tm_shape(veg_view) +
+               tmap::tm_raster(col.scale = tmap::tm_scale_categorical(values = euc_pal),
+                               col.legend = tmap::tm_legend(title = "Eucalipto en ASP")) +
+             tmap::tm_shape(capad_view) + tmap::tm_borders(col = "grey30", lwd = 0.5)
+  if (!is.null(niafed_view)) {
+    m6_view <- m6_view + tmap::tm_shape(niafed_view) +
+                 tmap::tm_polygons(fill = "firebrick", fill_alpha = 0.2,
+                                   col = "firebrick", col_alpha = 0.5, lwd = 0.5)
+  }
+  save_html(m6_view, "06_eucalipto_en_asp")
 }
 
 message("\nMapas exportados en: ", dir_figs, "  y  ", dir_maps)

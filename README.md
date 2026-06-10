@@ -12,7 +12,7 @@ Análisis geoespacial en R de la interacción amenaza-exposición en áreas silv
 ├── .env.example                      # plantilla de variables de entorno
 ├── data/{raw,processed,external}/    # datos (no versionados)
 ├── R/                                # funciones reutilizables
-├── scripts/                          # orquestación (01_descargar, 02_procesar, 03_mapas, 04_tabla_IUCN)
+├── scripts/                          # orquestación (01_descargar, 02_procesar, 03_mapas, 04_tabla_IUCN, 05_correlacion)
 ├── analysis/01_exploracion_nsw.qmd   # reporte Quarto con mapas
 └── outputs/{figs,maps}/              # productos finales
 ```
@@ -102,6 +102,7 @@ source("scripts/01_descargar_datos.R")        # idempotente; orienta descargas m
 source("scripts/02_procesar_nsw.R")           # recorta a NSW, reproyecta a EPSG:3577
 source("scripts/03_mapas_exploratorios.R")    # exporta PNG + HTML interactivos
 source("scripts/04_estadisticas_iucn.R")      # tabla cruzada IUCN × amenaza × exposición
+source("scripts/05_correlacion_euc_quemado.R")# Spearman %eucalipto vs %quemado (exploratorio)
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
 ```
 

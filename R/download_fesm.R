@@ -1,8 +1,10 @@
 # Descarga de severidad de fuego NSW — FESM 2019/20.
 # Fire Extent and Severity Mapping (NSW DPE + RFS).
 #
-# 5 clases (unburnt / low / moderate / high / extreme), raster 10 m derivado
-# de Sentinel-2 por ML semi-automatizado.
+# 4 niveles de severidad (low / moderate / high / extreme) + unburnt; raster
+# 10 m derivado de Sentinel-2 por ML semi-automatizado. En el archivo de NSW
+# los valores de píxel presentes son 0 (unburnt), 2, 3, 4, 5 (NoData = 255);
+# la clase 1 del esquema nominal (unburnt) no aparece en este producto.
 #
 # Portal: https://datasets.seed.nsw.gov.au/dataset/fire-extent-and-severity-mapping-fesm-2019-20
 # Licencia: CC-BY 4.0.

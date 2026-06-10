@@ -132,4 +132,45 @@ if (!is.null(nsw) && !is.null(fesm)) {
   save_png(m5, "05_severidad_fesm")
 }
 
+# Reclasifica NVIS MVG a la presencia de eucalipto según su ecología de fuego.
+#   Eucalipto esclerófilo (bosque/woodland): MVG 2,3,4,5,11 — combustible del
+#     fuego de copa de alta severidad descrito por Barker et al. (2022).
+#   Mallee (eucalipto): MVG 14,32 — régimen de fuego distinto (matorral árido);
+#     se distingue aparte para no confundir el argumento combustible→severidad.
+#   Resto (incl. eucalipto tropical MVG 12, atípico de NSW) → NA.
+reclass_eucalipto <- function(r) {
+  rcl <- matrix(c(2,1, 3,1, 4,1, 5,1, 11,1, 14,2, 32,2), ncol = 2, byrow = TRUE)
+  veg <- terra::classify(r, rcl, others = NA)
+  levels(veg) <- data.frame(value = c(1, 2),
+                            clase = c("Eucalipto esclerófilo", "Mallee (eucalipto)"))
+  veg
+}
+
+# Mapa 6: presencia de eucalipto DENTRO de las ASP — SOLO PNG
+# El ráster reclasificado se recorta y enmascara a los polígonos CAPAD, de modo
+# que solo se ve la vegetación de eucalipto que cae en áreas protegidas. El
+# perímetro Black Summer (rojo) se superpone para leer el solape combustible↔fuego.
+if (!is.null(nsw) && !is.null(capad) && !is.null(nvis)) {
+  tmap::tmap_mode("plot")
+  veg_euc <- reclass_eucalipto(nvis)
+  capad_v <- terra::project(terra::vect(capad), veg_euc)
+  veg_asp <- terra::mask(terra::crop(veg_euc, capad_v), capad_v)
+  m6 <- tmap::tm_shape(nsw) + tmap::tm_borders(col = "grey60") +
+        tmap::tm_shape(veg_asp) +
+          tmap::tm_raster(col.scale = tmap::tm_scale_categorical(
+                            values = c("#1b7837", "#b8a038")),
+                          col.legend = tmap::tm_legend(title = "Eucalipto en ASP")) +
+        tmap::tm_shape(capad) + tmap::tm_borders(col = "grey30", lwd = 0.3)
+  if (!is.null(niafed)) {
+    m6 <- m6 + tmap::tm_shape(niafed) +
+            tmap::tm_polygons(fill = "firebrick", fill_alpha = 0.25,
+                              col = "firebrick", col_alpha = 0.5, lwd = 0.3) +
+            tmap::tm_add_legend(type = "polygons", labels = "Perímetro Black Summer",
+                                fill = "firebrick", fill_alpha = 0.25,
+                                col = "firebrick", col_alpha = 0.5)
+  }
+  m6 <- m6 + tmap::tm_title("Eucalipto en ASP de NSW (NVIS MVG) y perímetro Black Summer")
+  save_png(m6, "06_eucalipto_en_asp")
+}
+
 message("\nMapas exportados en: ", dir_figs, "  y  ", dir_maps)

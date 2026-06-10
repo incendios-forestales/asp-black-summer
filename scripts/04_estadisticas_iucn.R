@@ -35,6 +35,9 @@ iucn_label <- c(
 # FESM 2019/20 recoded: 0=unburnt/nodata, 2=low, 3=moderate, 4=high, 5=extreme
 sev_label <- c("0" = "Unburnt/NoData", "2" = "Low", "3" = "Moderate",
                "4" = "High", "5" = "Extreme")
+# Eucalipto esclerófilo (combustible clave, Barker et al. 2022): MVG 2,3,4,5,11.
+# Misma definición que el Mapa 6; excluye mallee (14,32) y eucalipto tropical (12).
+euc_codes <- c(2, 3, 4, 5, 11)
 
 # --- Disolver CAPAD por IUCN ---
 # Algunas geometrías CAPAD traen holes mal orientados; hacemos make_valid +
@@ -98,6 +101,21 @@ mvg_cats <- terra::cats(nvis)[[1]]
 mvg_lookup <- setNames(mvg_cats$MVG_NAME, mvg_cats$Value)
 mvg_modal <- mvg_lookup[as.character(mvg_modal_num)]
 
+# --- % de eucalipto esclerófilo sobre el área total de cada categoría ---
+# Fracción del polígono cubierta por MVG de eucalipto esclerófilo, ponderada por
+# coverage_fraction y sobre celdas válidas (excluye NoData). Misma extracción que
+# severidad pero sobre NVIS y sin filtrar el área quemada.
+message("Calculando % de eucalipto esclerófilo por categoría ...")
+veg_vals_list <- exactextractr::exact_extract(nvis, capad_by_iucn, progress = FALSE)
+euc_pct_tbl <- purrr::map2_dfr(veg_vals_list, capad_by_iucn$IUCN,
+                                function(df, iuc) {
+  df <- dplyr::filter(df, !is.na(value))
+  tot <- sum(df$coverage_fraction, na.rm = TRUE)
+  euc <- sum(df$coverage_fraction[df$value %in% euc_codes], na.rm = TRUE)
+  data.frame(IUCN = iuc,
+             pct_euc = if (tot > 0) round(100 * euc / tot, 1) else NA_real_)
+})
+
 # --- Ensamblar ---
 totales <- capad_by_iucn |>
   sf::st_drop_geometry() |>
@@ -113,6 +131,7 @@ tabla <- totales |>
   dplyr::left_join(burned_stats, by = "IUCN") |>
   dplyr::mutate(burned_ha = tidyr::replace_na(burned_ha, 0),
                 pct_quemado = round(100 * burned_ha / area_ha, 1)) |>
+  dplyr::left_join(euc_pct_tbl, by = "IUCN") |>
   dplyr::left_join(sev_dist_wide, by = "IUCN") |>
   dplyr::mutate(IUCN_lbl = iucn_label[IUCN]) |>
   dplyr::arrange(factor(IUCN, levels = iucn_order))
@@ -126,6 +145,7 @@ tabla_out <- tabla |>
                 `Área (ha)` = area_ha,
                 `Quemado (ha)` = burned_ha,
                 `% quemado` = pct_quemado,
+                `% eucalipto` = pct_euc,
                 `Severidad modal` = sev_modal,
                 dplyr::any_of(sev_cols),
                 `MVG dominante` = mvg_modal)

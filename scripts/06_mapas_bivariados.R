@@ -6,6 +6,7 @@
 # Salida  : outputs/figs/06a_bivariado_exposicion_severidad.png
 #           outputs/figs/06b_bivariado_eucalipto_severidad.png
 #           outputs/figs/06c_heatmap_iucn_severidad.png
+#           outputs/figs/06d_estrictez_quemado.png
 #
 # Decisión de diseño (ver discusión): IUCN es una categoría de manejo (nominal),
 # no una magnitud, así que NO se usa como eje de un bivariado. Los dos mapas
@@ -179,5 +180,49 @@ g3 <- ggplot(hm, aes(var, IUCN, fill = val)) +
 ggsave(file.path(dir_figs, "06c_heatmap_iucn_severidad.png"), g3,
        width = 9, height = 5.5, dpi = 200)
 message("[png] 06c_heatmap_iucn_severidad.png")
+
+# --- 06d: % quemado por categoría IUCN, ordenado por ESTRICTEZ de protección ---
+# Hace explícita la relación estrictez<->exposición que el heatmap 06c solo deja
+# entrever. IUCN es nominal, por eso NO es un bivariado: el eje Y se ordena por
+# estrictez (Ia arriba = más estricta) y % quemado se lee en X. Cuantificación
+# en scripts/07. NAS se excluye por no tener nivel de protección rankeable.
+message("Construyendo lollipop estrictez × % quemado ...")
+estrictez <- c(Ia = 1, Ib = 2, II = 3, III = 4, IV = 5, V = 6, VI = 7)
+ll <- csv |>
+  dplyr::mutate(cod = sub("^([^ ]+) .*", "\\1", IUCN),
+                rank_e = estrictez[cod]) |>
+  dplyr::filter(!is.na(rank_e)) |>
+  dplyr::arrange(rank_e) |>
+  dplyr::mutate(IUCN = factor(IUCN, levels = rev(IUCN)),   # Ia (más estricta) arriba
+                flag = dplyr::case_when(
+                  cod == "Ia" ~ "Más estricta, baja exposición",
+                  cod == "Ib" ~ "Mayor exposición",
+                  TRUE        ~ "Resto"))
+
+g4 <- ggplot(ll, aes(x = `% quemado`, y = IUCN)) +
+  geom_segment(aes(x = 0, xend = `% quemado`, yend = IUCN),
+               color = "grey75", linewidth = 0.7) +
+  geom_point(aes(color = flag), size = 5) +
+  geom_text(aes(label = sprintf("%.1f%%", `% quemado`)), hjust = -0.3, size = 3.2) +
+  scale_color_manual(values = c("Más estricta, baja exposición" = "#2166ac",
+                                "Mayor exposición" = "#b2182b",
+                                "Resto" = "grey50"), name = NULL) +
+  scale_x_continuous(limits = c(0, 92), expand = expansion(mult = c(0, 0.02))) +
+  labs(title = "Exposición al fuego por estrictez de protección (IUCN)",
+       subtitle = "ASP de NSW · Black Summer 2019-2020 · de más (arriba) a menos estricta",
+       x = "% del área de la categoría quemada", y = NULL,
+       caption = paste0(
+         "Spearman estrictez vs % quemado: rho = -0.50 (p = 0.27, n = 7).\n",
+         "Tendencia débil 'más estricta -> más quemada', NO significativa; la más ",
+         "estricta (Ia) la contradice. NAS excluida (sin nivel de protección).")) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        legend.position = "top",
+        plot.title = element_text(face = "bold"),
+        plot.caption = element_text(size = 8, color = "grey30", hjust = 0),
+        plot.background = element_rect(fill = "white", color = NA))
+ggsave(file.path(dir_figs, "06d_estrictez_quemado.png"), g4,
+       width = 9, height = 5, dpi = 200)
+message("[png] 06d_estrictez_quemado.png")
 
 message("\nFiguras bivariadas exportadas en: ", dir_figs)

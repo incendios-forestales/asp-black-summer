@@ -89,11 +89,14 @@ Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer 
 
 ## Productos
 
-- `analysis/01_exploracion_nsw.html` — reporte Quarto con 5 mapas estáticos y la tabla cruzada IUCN × amenaza × exposición.
-- `outputs/figs/*.png` — 5 mapas estáticos sueltos (contexto ASP, amenaza, intersección, NVIS, FESM).
-- `outputs/maps/*.html` — 3 mapas vectoriales interactivos (Leaflet) para los mapas 1, 2 y 3.
+- `analysis/01_exploracion_nsw.html` — reporte Quarto con 6 mapas estáticos y la tabla cruzada IUCN × amenaza × exposición (incluye `% eucalipto`).
+- `outputs/figs/0[1-6]_*.png` — 6 mapas estáticos sueltos: contexto ASP, amenaza, intersección, NVIS, FESM y eucalipto en ASP.
+- `outputs/figs/06[a-d]_*.png` — 4 figuras de síntesis: bivariado Exposición × Severidad (`06a`), bivariado Eucalipto × Severidad (`06b`), heatmap IUCN × {%quemado, %eucalipto, severidad} (`06c`) y lollipop % quemado por estrictez IUCN (`06d`).
+- `outputs/maps/*.html` — 4 mapas interactivos (Leaflet): 1, 2, 3 y 6 (eucalipto en ASP).
 - `outputs/tabla_iucn_amenaza_exposicion.{csv,html}` — tabla cruzada por categoría IUCN.
 - `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS.
+
+Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales.
 
 ## Pipeline
 
@@ -107,6 +110,29 @@ source("scripts/06_mapas_bivariados.R")       # mapas bivariados + heatmap-resum
 source("scripts/07_correlacion_estrictez_quemado.R") # Spearman estrictez IUCN vs %quemado (exploratorio)
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
 ```
+
+## Próximos pasos / pendientes
+
+- **Script 08 — regresión múltiple por polígono ASP (pendiente).** Las correlaciones
+  bivariadas (`05` eucalipto, `07` estrictez) sugieren asociaciones débiles con el
+  `% quemado`, pero son no significativas (n = 7 categorías) y probablemente
+  **confundidas por la ubicación/relieve** de las ASP (las áreas Wilderness, Ib,
+  están en la escarpa boscosa oriental, la más expuesta). El paso para pasar de
+  "se asocia" a "aporta de forma independiente" es una **regresión múltiple por
+  polígono** (n ≈ 1099, o solo los 392 quemados según se defina el outcome):
+  `% quemado ~ % eucalipto + estrictez_IUCN + terreno`. Las covariables por polígono
+  `pct_burned`, `pct_euc` e `IUCN` ya se calculan en `scripts/06_mapas_bivariados.R`
+  (estadística zonal con `exactextractr`) y pueden reutilizarse.
+- **Falta el DEM (estructura primaria / relieve).** Para incorporar el terreno como
+  covariable hace falta el DEM, que está **declarado pero no descargado**:
+  `R/download_dem.R` orienta la descarga manual desde ELVIS y `data/raw/dem/` está
+  vacío. Una vez descargado: recortar a NSW en `scripts/02`, derivar pendiente y
+  rugosidad con `terra::terrain()`, y extraer estadística zonal por polígono igual
+  que el MVG/eucalipto. Esto cierra el 3.er nivel del marco Miklós (hoy solo se
+  operacionalizan estructura secundaria y terciaria).
+- **Integración de las figuras `06a–d`.** Son prototipos en `outputs/figs`; aún no
+  están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir
+  cuáles entran al póster antes de integrarlas.
 
 ## Reproducibilidad
 

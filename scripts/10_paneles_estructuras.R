@@ -27,8 +27,9 @@ col_sec  <- "#2e7d32"   # secundaria · vegetación
 col_terc <- "#5e3c99"   # terciaria · manejo (ASP)
 
 # --- Datos ---
-nsw   <- sf::st_read(file.path(dir_processed, "nsw_boundary.gpkg"), quiet = TRUE)
-capad <- sf::st_read(file.path(dir_processed, "nsw_capad_2020.gpkg"), quiet = TRUE)
+nsw    <- sf::st_read(file.path(dir_processed, "nsw_boundary.gpkg"), quiet = TRUE)
+capad  <- sf::st_read(file.path(dir_processed, "nsw_capad_2020.gpkg"), quiet = TRUE)
+niafed <- sf::st_read(file.path(dir_processed, "nsw_niafed_black_summer.gpkg"), quiet = TRUE)
 dem   <- terra::rast(file.path(dir_processed, "nsw_dem.tif"))
 nvis  <- terra::rast(file.path(dir_processed, "nsw_nvis_mvg.tif"))
 fesm  <- terra::rast(file.path(dir_processed, "nsw_fesm_severity.tif"))
@@ -51,6 +52,27 @@ tema_panel <- function(accent) {
 }
 capa_nsw <- geom_sf(data = nsw, fill = "grey97", color = "grey60", linewidth = 0.3)
 
+# Perímetro Black Summer (NIAFED) como contorno carbón, idéntico en los tres
+# paneles: el mismo "evento" recurre sobre las tres estructuras. Carbón (no rojo)
+# para no confundir con la severidad del panel terciario.
+#
+# NIAFED es la huella AGREGADA del evento: miles de parches pequeños cuyo contorno
+# crudo se ve como ruido a escala estatal. Aplicamos un CIERRE MORFOLÓGICO
+# (buffer +1.5 km -> union -> buffer -1.5 km) para fusionar parches cercanos en un
+# perímetro legible, y simplificamos. Es una generalización para visualización, no
+# cambia ningún análisis.
+niafed_perim <- niafed |>
+  sf::st_union() |>
+  sf::st_buffer(1500) |>
+  sf::st_buffer(-1500) |>
+  sf::st_simplify(dTolerance = 400)
+
+capa_perimetro <- list(
+  geom_sf(data = niafed_perim, aes(color = "Perímetro Black Summer"),
+          fill = NA, linewidth = 0.4),
+  scale_color_manual(values = c("Perímetro Black Summer" = "#1a1a1a"), name = NULL)
+)
+
 guardar <- function(g, name, w = 8, h = 7) {
   out <- file.path(dir_figs, paste0(name, ".png"))
   ggsave(out, g, width = w, height = h, dpi = 200)
@@ -66,6 +88,7 @@ gA <- ggplot() +
   capa_nsw +
   tidyterra::geom_spatraster(data = dem, maxcell = 6e5) +
   geom_sf(data = nsw, fill = NA, color = "grey55", linewidth = 0.3) +
+  capa_perimetro +
   scale_fill_gradientn(colours = ramp_dem, na.value = "transparent",
                        name = "Elevación\n(m s.n.m.)") +
   labs(title = "Primaria · relieve",
@@ -86,6 +109,7 @@ gB <- ggplot() +
   capa_nsw +
   tidyterra::geom_spatraster(data = is_euc, maxcell = 6e5) +
   geom_sf(data = nsw, fill = NA, color = "grey55", linewidth = 0.3) +
+  capa_perimetro +
   scale_fill_manual(values = c("Eucalipto esclerófilo" = col_sec,
                                "Otra vegetación" = "grey85"),
                     na.value = "transparent", name = NULL,
@@ -114,6 +138,7 @@ gC <- ggplot() +
   tidyterra::geom_spatraster(data = sev, maxcell = 6e5) +
   geom_sf(data = capad, fill = NA, color = col_terc, linewidth = 0.12) +
   geom_sf(data = nsw, fill = NA, color = "grey55", linewidth = 0.3) +
+  capa_perimetro +
   scale_fill_manual(values = sev_cols, na.value = "transparent",
                     name = "Severidad\ndel fuego", na.translate = FALSE) +
   labs(title = "Terciaria · manejo (ASP) × fuego",

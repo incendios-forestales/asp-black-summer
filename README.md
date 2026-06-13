@@ -12,7 +12,7 @@ Análisis geoespacial en R de la interacción amenaza-exposición en áreas silv
 ├── .env.example                      # plantilla de variables de entorno
 ├── data/{raw,processed,external}/    # datos (no versionados)
 ├── R/                                # funciones reutilizables
-├── scripts/                          # orquestación (01_descargar, 02_procesar, 03_mapas, 04_tabla_IUCN, 05/07_correlacion, 06_bivariados)
+├── scripts/                          # orquestación (01_descargar, 02_procesar, 03_mapas, 04_tabla_IUCN, 05/07_correlacion, 06_bivariados, 08_regresion)
 ├── analysis/01_exploracion_nsw.qmd   # reporte Quarto con mapas
 └── outputs/{figs,maps}/              # productos finales
 ```
@@ -82,7 +82,7 @@ Todas las fuentes son oficiales y de licencia abierta (CC-BY 4.0 salvo indicaci�
 | Severidad FESM 2019/20  | NSW SEED                         | Amenaza                           |
 | Áreas protegidas        | CAPAD 2020 Terrestrial — DCCEEW  | Estructura terciaria (normativa)  |
 | Vegetación mayor (MVG)  | NVIS v7.0 — DCCEEW               | Estructura secundaria             |
-| Relieve                 | GA 1-second DEM                  | Estructura primaria               |
+| Relieve                 | DEM SRTM vía `elevatr` (≈ GA 1-sec) | Estructura primaria            |
 | Límite estatal          | ABS ASGS Ed.3                    | Administrativo                    |
 
 Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer Nature.
@@ -94,9 +94,10 @@ Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer 
 - `outputs/figs/06[a-d]_*.png` — 4 figuras de síntesis: bivariado Exposición × Severidad (`06a`), bivariado Eucalipto × Severidad (`06b`), heatmap IUCN × {%quemado, %eucalipto, severidad} (`06c`) y lollipop % quemado por estrictez IUCN (`06d`).
 - `outputs/maps/*.html` — 4 mapas interactivos (Leaflet): 1, 2, 3 y 6 (eucalipto en ASP).
 - `outputs/tabla_iucn_amenaza_exposicion.{csv,html}` — tabla cruzada por categoría IUCN.
-- `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS.
+- `outputs/regresion_quemado_coeficientes.csv` — coeficientes de la regresión por polígono ASP (script `08`).
+- `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS (incluye `nsw_dem.tif` y `nsw_slope.tif`).
 
-Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales.
+Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales. El script `08` sube la unidad de análisis al **polígono ASP** (n de cientos) y ajusta un GLM cuasibinomial que controla por terreno (elevación, pendiente) y vegetación.
 
 ## Pipeline
 
@@ -108,28 +109,31 @@ source("scripts/04_estadisticas_iucn.R")      # tabla cruzada IUCN × amenaza ×
 source("scripts/05_correlacion_euc_quemado.R")# Spearman %eucalipto vs %quemado (exploratorio)
 source("scripts/06_mapas_bivariados.R")       # mapas bivariados + heatmap-resumen IUCN
 source("scripts/07_correlacion_estrictez_quemado.R") # Spearman estrictez IUCN vs %quemado (exploratorio)
+source("scripts/08_regresion_quemado.R")      # GLM cuasibinomial por polígono ASP, controla por terreno
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
 ```
 
 ## Próximos pasos / pendientes
 
-- **Script 08 — regresión múltiple por polígono ASP (pendiente).** Las correlaciones
-  bivariadas (`05` eucalipto, `07` estrictez) sugieren asociaciones débiles con el
-  `% quemado`, pero son no significativas (n = 7 categorías) y probablemente
-  **confundidas por la ubicación/relieve** de las ASP (las áreas Wilderness, Ib,
-  están en la escarpa boscosa oriental, la más expuesta). El paso para pasar de
-  "se asocia" a "aporta de forma independiente" es una **regresión múltiple por
-  polígono** (n ≈ 1099, o solo los 392 quemados según se defina el outcome):
-  `% quemado ~ % eucalipto + estrictez_IUCN + terreno`. Las covariables por polígono
-  `pct_burned`, `pct_euc` e `IUCN` ya se calculan en `scripts/06_mapas_bivariados.R`
-  (estadística zonal con `exactextractr`) y pueden reutilizarse.
-- **Falta el DEM (estructura primaria / relieve).** Para incorporar el terreno como
-  covariable hace falta el DEM, que está **declarado pero no descargado**:
-  `R/download_dem.R` orienta la descarga manual desde ELVIS y `data/raw/dem/` está
-  vacío. Una vez descargado: recortar a NSW en `scripts/02`, derivar pendiente y
-  rugosidad con `terra::terrain()`, y extraer estadística zonal por polígono igual
-  que el MVG/eucalipto. Esto cierra el 3.er nivel del marco Miklós (hoy solo se
-  operacionalizan estructura secundaria y terciaria).
+- **Registrar `elevatr` en `renv` (requisito del DEM).** El DEM ahora se baja por
+  código con `elevatr::get_elev_raster()` (ver `R/download_dem.R`), lo que evita la
+  descarga manual de ELVIS. Falta fijar el paquete en `renv.lock`. **No usar
+  `renv::snapshot()` completo** (poda el lock por el gotcha conocido); en su lugar:
+  ```r
+  renv::install("elevatr")
+  renv::snapshot(packages = "elevatr")   # añade solo elevatr + deps, sin podar
+  ```
+- **DEM (estructura primaria / relieve) — implementado.** `scripts/02` ya reproyecta
+  a Albers, recorta a NSW y deriva pendiente con `terra::terrain()`, produciendo
+  `data/processed/{nsw_dem,nsw_slope}.tif`. Cierra el 3.er nivel del marco Miklós
+  (antes solo se operacionalizaban estructura secundaria y terciaria).
+- **Script 08 — regresión por polígono ASP — implementado.** Sube la unidad de
+  análisis de categoría IUCN (n = 7) al **polígono** (n de cientos) y ajusta un GLM
+  cuasibinomial ponderado por área: `% quemado ~ estrictez + elevación + pendiente +
+  % eucalipto`. Compara M0 (solo estrictez) vs M1 (con terreno+vegetación) para ver
+  cuánto del "efecto estrictez" del script 07 sobrevive al control por confusión.
+  Falta **interpretar la corrida real** (requiere el DEM descargado) y decidir si
+  entra al póster.
 - **Integración de las figuras `06a–d`.** Son prototipos en `outputs/figs`; aún no
   están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir
   cuáles entran al póster antes de integrarlas.

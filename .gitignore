@@ -4,6 +4,7 @@
 data/raw/
 data/processed/
 data/external/
+data/*.zip
 
 renv/library/
 renv/staging/

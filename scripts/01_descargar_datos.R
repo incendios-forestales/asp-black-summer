@@ -37,7 +37,7 @@ tryCatch(download_nvis_mvg(), error = function(e) message(conditionMessage(e)))
 message("=== NSW FESM 2019/20 (severidad) ===")
 tryCatch(download_fesm_2019_20(), error = function(e) message(conditionMessage(e)))
 
-message("=== GA 1-second DEM (relieve) ===")
+message("=== DEM NSW (relieve, vía elevatr) ===")
 tryCatch(download_dem_nsw(), error = function(e) message(conditionMessage(e)))
 
 message("\nDescargas completadas (o instrucciones manuales emitidas para lo que falte).")

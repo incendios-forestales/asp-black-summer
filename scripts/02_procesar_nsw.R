@@ -19,6 +19,7 @@ source(here("R", "download_niafed.R"))
 source(here("R", "download_capad.R"))
 source(here("R", "download_nvis.R"))
 source(here("R", "download_fesm.R"))
+source(here("R", "download_dem.R"))
 
 dir_processed <- here("data", "processed")
 dir.create(dir_processed, recursive = TRUE, showWarnings = FALSE)
@@ -102,6 +103,33 @@ tryCatch({
                      file.path(dir_processed, "nsw_fesm_severity.tif"),
                      overwrite = TRUE, datatype = "INT1U")
   message("  FESM NSW (100 m) guardado.")
+}, error = function(e) message("  [SKIP] ", conditionMessage(e)))
+
+# 6. DEM (relieve) ----
+# DEM bajado por elevatr (mosaico SRTM ~600 m a z=8) en EPSG:4326. Lo
+# reproyectamos a Albers, recortamos/enmascaramos a NSW y derivamos la pendiente
+# (grados) con terra::terrain. Guardamos elevación y pendiente como dos rásters
+# continuos (Float32) que alimentan la regresión por polígono ASP (script 08).
+message("Procesando DEM (elevación + pendiente, reproj a Albers) ...")
+tryCatch({
+  path_dem <- download_dem_nsw()
+  dem <- terra::rast(path_dem)
+  dem_alb <- terra::project(dem, PROJ_ALBERS, method = "bilinear")
+  dem_nsw <- terra::crop(dem_alb, terra::vect(nsw))
+  dem_nsw <- terra::mask(dem_nsw, terra::vect(nsw))
+  names(dem_nsw) <- "elevation"
+  terra::writeRaster(dem_nsw,
+                     file.path(dir_processed, "nsw_dem.tif"),
+                     overwrite = TRUE, datatype = "FLT4S")
+
+  # Pendiente en grados. Se calcula sobre el DEM ya en Albers (unidades métricas)
+  # para que la pendiente tenga sentido geométrico.
+  slope_nsw <- terra::terrain(dem_nsw, v = "slope", unit = "degrees")
+  names(slope_nsw) <- "slope"
+  terra::writeRaster(slope_nsw,
+                     file.path(dir_processed, "nsw_slope.tif"),
+                     overwrite = TRUE, datatype = "FLT4S")
+  message("  DEM + pendiente NSW guardados.")
 }, error = function(e) message("  [SKIP] ", conditionMessage(e)))
 
 message("\nProcesamiento completado. Archivos en: ", dir_processed)

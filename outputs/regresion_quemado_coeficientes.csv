@@ -1,0 +1,8 @@
+modelo,termino,estimate,std_error,statistic,p_value
+M0: solo estrictez,(Intercept),-0.7084,0.0565,-12.528,0
+M0: solo estrictez,z_estrictez,-0.3155,0.0968,-3.26,0.0011
+M1: estrictez + terreno + vegetación,(Intercept),-1.4318,0.1217,-11.761,0
+M1: estrictez + terreno + vegetación,z_estrictez,-0.0944,0.1283,-0.735,0.4623
+M1: estrictez + terreno + vegetación,z_elev,-0.9222,0.0987,-9.345,0
+M1: estrictez + terreno + vegetación,z_slope,2.004,0.1228,16.32,0
+M1: estrictez + terreno + vegetación,z_euc,0.878,0.1322,6.642,0

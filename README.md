@@ -95,9 +95,10 @@ Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer 
 - `outputs/maps/*.html` — 4 mapas interactivos (Leaflet): 1, 2, 3 y 6 (eucalipto en ASP).
 - `outputs/tabla_iucn_amenaza_exposicion.{csv,html}` — tabla cruzada por categoría IUCN.
 - `outputs/regresion_quemado_coeficientes.csv` — coeficientes de la regresión por polígono ASP (script `08`).
-- `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS (incluye `nsw_dem.tif` y `nsw_slope.tif`).
+- `outputs/figs/09_forest_estructuras.png` — forest plot de síntesis: efecto de cada estructura del paisaje (relieve, vegetación, manejo) sobre la probabilidad de quemarse (script `09`).
+- `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS (incluye `nsw_dem.tif`, `nsw_slope.tif` y `nsw_northness.tif`).
 
-Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales. El script `08` sube la unidad de análisis al **polígono ASP** (n de cientos) y ajusta un GLM cuasibinomial que controla por terreno (elevación, pendiente) y vegetación.
+Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales. El script `08` sube la unidad de análisis al **polígono ASP** (n de cientos) y ajusta un GLM cuasibinomial que controla por terreno (elevación, pendiente, orientación) y vegetación; el `09` lo resume en un forest plot agrupado por las tres estructuras de Miklós.
 
 ## Pipeline
 
@@ -110,33 +111,32 @@ source("scripts/05_correlacion_euc_quemado.R")# Spearman %eucalipto vs %quemado 
 source("scripts/06_mapas_bivariados.R")       # mapas bivariados + heatmap-resumen IUCN
 source("scripts/07_correlacion_estrictez_quemado.R") # Spearman estrictez IUCN vs %quemado (exploratorio)
 source("scripts/08_regresion_quemado.R")      # GLM cuasibinomial por polígono ASP, controla por terreno
+source("scripts/09_forest_estructuras.R")     # forest plot de síntesis agrupado por estructura (póster)
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
 ```
 
 ## Próximos pasos / pendientes
 
-- **Registrar `elevatr` en `renv` (requisito del DEM).** El DEM ahora se baja por
-  código con `elevatr::get_elev_raster()` (ver `R/download_dem.R`), lo que evita la
-  descarga manual de ELVIS. Falta fijar el paquete en `renv.lock`. **No usar
-  `renv::snapshot()` completo** (poda el lock por el gotcha conocido); en su lugar:
-  ```r
-  renv::install("elevatr")
-  renv::snapshot(packages = "elevatr")   # añade solo elevatr + deps, sin podar
-  ```
-- **DEM (estructura primaria / relieve) — implementado.** `scripts/02` ya reproyecta
-  a Albers, recorta a NSW y deriva pendiente con `terra::terrain()`, produciendo
-  `data/processed/{nsw_dem,nsw_slope}.tif`. Cierra el 3.er nivel del marco Miklós
-  (antes solo se operacionalizaban estructura secundaria y terciaria).
-- **Script 08 — regresión por polígono ASP — implementado.** Sube la unidad de
-  análisis de categoría IUCN (n = 7) al **polígono** (n de cientos) y ajusta un GLM
-  cuasibinomial ponderado por área: `% quemado ~ estrictez + elevación + pendiente +
-  % eucalipto`. Compara M0 (solo estrictez) vs M1 (con terreno+vegetación) para ver
-  cuánto del "efecto estrictez" del script 07 sobrevive al control por confusión.
-  Falta **interpretar la corrida real** (requiere el DEM descargado) y decidir si
-  entra al póster.
-- **Integración de las figuras `06a–d`.** Son prototipos en `outputs/figs`; aún no
-  están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir
-  cuáles entran al póster antes de integrarlas.
+- **DEM (estructura primaria / relieve) — implementado.** `R/download_dem.R` baja el
+  DEM por código con `elevatr::get_elev_raster()` (ya fijado en `renv.lock`); `scripts/02`
+  reproyecta a Albers, recorta a NSW y deriva **pendiente** y **northness** (orientación
+  N-S de la ladera) con `terra::terrain()`, produciendo `data/processed/{nsw_dem,nsw_slope,nsw_northness}.tif`.
+  Cierra el 3.er nivel del marco Miklós (antes solo estructura secundaria y terciaria).
+- **Scripts 08 + 09 — regresión por polígono ASP y forest plot — implementados.** El `08`
+  sube la unidad de análisis de categoría IUCN (n = 7) al **polígono** (n de cientos) y
+  ajusta un GLM cuasibinomial ponderado por área: `% quemado ~ estrictez + elevación +
+  pendiente + northness + % eucalipto`, comparando M0 (solo estrictez) vs M1 (con
+  terreno+vegetación). El `09` resume M1 en un forest plot agrupado por estructura
+  (figura de síntesis del póster). **Pendiente:** corregir los IC por **autocorrelación
+  espacial** (errores estándar cluster-robustos por bioregión IBRA, o modelo mixto/espacial)
+  antes de los números finales.
+- **Diseño del póster (marco Miklós).** Tres paneles-mapa = las tres estructuras
+  (primaria/DEM, secundaria/vegetación, terciaria/ASP, esta última con la severidad del
+  fuego encima) + panel de síntesis = forest plot `09`. El fuego (NIAFED + FESM) es el
+  *evento* que actúa sobre las estructuras, no una cuarta estructura.
+- **Integración de las figuras `06a–d` y `09`.** Son prototipos en `outputs/figs`; aún no
+  están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir cuáles
+  entran al póster antes de integrarlas.
 
 ## Reproducibilidad
 

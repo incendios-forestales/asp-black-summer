@@ -18,12 +18,13 @@
 # Respuesta: proporción de área quemada del polígono (pct_quemado ∈ [0, 1]).
 # Familia  : quasibinomial con weights = área (maneja proporciones acotadas y la
 #            sobredispersión sin necesitar betareg ni paquetes extra).
-# Predictores (estandarizados): elevación media, pendiente media, % eucalipto
-#            esclerófilo y rango de estrictez IUCN (1 = Ia ... 7 = VI).
+# Predictores (estandarizados): elevación media, pendiente media, northness
+#            (orientación N-S de la ladera), % eucalipto esclerófilo y rango de
+#            estrictez IUCN (1 = Ia ... 7 = VI).
 # Se ajustan dos modelos anidados para ver cuánto del "efecto estrictez"
 # sobrevive al control por terreno+vegetación:
-#   M0: quemado ~ estrictez                       (cruda, análoga al script 07)
-#   M1: quemado ~ estrictez + elevación + pendiente + %eucalipto
+#   M0: quemado ~ estrictez                                  (cruda, análoga al 07)
+#   M1: quemado ~ estrictez + elevación + pendiente + northness + %eucalipto
 #
 # Ejecutar:  Rscript scripts/08_regresion_quemado.R
 
@@ -37,6 +38,7 @@ capad  <- sf::st_read(here::here("data/processed/nsw_capad_2020.gpkg"), quiet = 
 niafed <- sf::st_read(here::here("data/processed/nsw_niafed_black_summer.gpkg"), quiet = TRUE)
 dem    <- terra::rast(here::here("data/processed/nsw_dem.tif"))
 slope  <- terra::rast(here::here("data/processed/nsw_slope.tif"))
+north  <- terra::rast(here::here("data/processed/nsw_northness.tif"))
 nvis   <- terra::rast(here::here("data/processed/nsw_nvis_mvg.tif"))
 
 # Eucalipto esclerófilo: misma definición que scripts 04/06 (MVG 2,3,4,5,11).
@@ -74,9 +76,12 @@ burned_by_poly <- inter |>
   dplyr::summarise(burned_ha = sum(burned_ha), .groups = "drop")
 
 # --- Terreno medio por polígono (elevación, pendiente) ---
-message("Extrayendo elevación y pendiente medias por polígono ...")
+message("Extrayendo elevación, pendiente y northness medias por polígono ...")
 capad$elev_mean  <- exactextractr::exact_extract(dem,   capad, fun = "mean", progress = FALSE)
 capad$slope_mean <- exactextractr::exact_extract(slope, capad, fun = "mean", progress = FALSE)
+# Northness es lineal en [-1,1], así que su media por polígono SÍ tiene sentido
+# (a diferencia del aspect en grados): media +0.8 = laderas mayormente al norte.
+capad$north_mean <- exactextractr::exact_extract(north, capad, fun = "mean", progress = FALSE)
 
 # --- % eucalipto esclerófilo por polígono (coverage-weighted, igual que 04) ---
 message("Calculando % de eucalipto esclerófilo por polígono ...")
@@ -98,7 +103,8 @@ dat <- capad |>
     rank_estrictez = estrictez[as.character(IUCN)]
   ) |>
   dplyr::filter(!is.na(rank_estrictez),                    # descarta NAS
-                !is.na(elev_mean), !is.na(slope_mean), !is.na(pct_euc))
+                !is.na(elev_mean), !is.na(slope_mean),
+                !is.na(north_mean), !is.na(pct_euc))
 
 message(sprintf("Polígonos ASP en el modelo: %d (de %d, tras excluir NAS y NA)",
                 nrow(dat), nrow(capad)))
@@ -110,6 +116,7 @@ dat <- dat |>
     z_estrictez = z(rank_estrictez),
     z_elev      = z(elev_mean),
     z_slope     = z(slope_mean),
+    z_north     = z(north_mean),
     z_euc       = z(pct_euc)
   )
 
@@ -119,7 +126,7 @@ dat <- dat |>
 # "más estricta -> más quemada": NEGATIVO (menor rango = más estricta = más fuego).
 m0 <- glm(pct_quemado ~ z_estrictez,
           family = quasibinomial, weights = area_ha, data = dat)
-m1 <- glm(pct_quemado ~ z_estrictez + z_elev + z_slope + z_euc,
+m1 <- glm(pct_quemado ~ z_estrictez + z_elev + z_slope + z_north + z_euc,
           family = quasibinomial, weights = area_ha, data = dat)
 
 # Pseudo-R² de devianza para cada modelo.
@@ -159,7 +166,7 @@ cat("\n--- M0: quemado ~ estrictez ---\n")
 print(round(summary(m0)$coefficients, 4))
 cat(sprintf("Pseudo-R² (devianza): %.3f\n", pseudo_r2(m0)))
 
-cat("\n--- M1: quemado ~ estrictez + elevación + pendiente + %eucalipto ---\n")
+cat("\n--- M1: quemado ~ estrictez + elevación + pendiente + northness + %eucalipto ---\n")
 print(round(summary(m1)$coefficients, 4))
 cat(sprintf("Pseudo-R² (devianza): %.3f\n", pseudo_r2(m1)))
 

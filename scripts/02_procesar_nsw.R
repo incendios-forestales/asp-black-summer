@@ -129,7 +129,19 @@ tryCatch({
   terra::writeRaster(slope_nsw,
                      file.path(dir_processed, "nsw_slope.tif"),
                      overwrite = TRUE, datatype = "FLT4S")
-  message("  DEM + pendiente NSW guardados.")
+
+  # Orientación de la ladera (aspect) -> northness. El aspect es CIRCULAR (0=360),
+  # así que no se promedia ni se modela en grados. Lo proyectamos al eje N-S con
+  # northness = cos(aspect): +1 = mira al norte, -1 = al sur. En el hemisferio sur
+  # las laderas al norte reciben más sol -> más secas -> arden más. En terreno
+  # plano el aspect es NA (sin orientación), y northness queda NA (correcto).
+  aspect_nsw <- terra::terrain(dem_nsw, v = "aspect", unit = "radians")
+  north_nsw  <- cos(aspect_nsw)
+  names(north_nsw) <- "northness"
+  terra::writeRaster(north_nsw,
+                     file.path(dir_processed, "nsw_northness.tif"),
+                     overwrite = TRUE, datatype = "FLT4S")
+  message("  DEM + pendiente + northness NSW guardados.")
 }, error = function(e) message("  [SKIP] ", conditionMessage(e)))
 
 message("\nProcesamiento completado. Archivos en: ", dir_processed)

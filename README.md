@@ -96,6 +96,7 @@ Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer 
 - `outputs/tabla_iucn_amenaza_exposicion.{csv,html}` — tabla cruzada por categoría IUCN.
 - `outputs/regresion_quemado_coeficientes.csv` — coeficientes de la regresión por polígono ASP (script `08`).
 - `outputs/figs/09_forest_estructuras.png` — forest plot de síntesis: efecto de cada estructura del paisaje (relieve, vegetación, manejo) sobre la probabilidad de quemarse (script `09`).
+- `outputs/figs/10[a-c]_*.png` — tres paneles-mapa de las estructuras de Miklós para el póster (script `10`): `10a` relieve (DEM), `10b` vegetación (eucalipto esclerófilo), `10c` ASP × severidad del fuego. `outputs/figs/10_poster_preview.png` arma el set sobre el forest plot.
 - `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS (incluye `nsw_dem.tif`, `nsw_slope.tif` y `nsw_northness.tif`).
 
 Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales. El script `08` sube la unidad de análisis al **polígono ASP** (n de cientos) y ajusta un GLM cuasibinomial que controla por terreno (elevación, pendiente, orientación) y vegetación; el `09` lo resume en un forest plot agrupado por las tres estructuras de Miklós.
@@ -112,6 +113,7 @@ source("scripts/06_mapas_bivariados.R")       # mapas bivariados + heatmap-resum
 source("scripts/07_correlacion_estrictez_quemado.R") # Spearman estrictez IUCN vs %quemado (exploratorio)
 source("scripts/08_regresion_quemado.R")      # GLM cuasibinomial por polígono ASP, controla por terreno
 source("scripts/09_forest_estructuras.R")     # forest plot de síntesis agrupado por estructura (póster)
+source("scripts/10_paneles_estructuras.R")    # tres paneles-mapa de las estructuras (póster)
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
 ```
 
@@ -130,10 +132,12 @@ quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
   (figura de síntesis del póster). **Pendiente:** corregir los IC por **autocorrelación
   espacial** (errores estándar cluster-robustos por bioregión IBRA, o modelo mixto/espacial)
   antes de los números finales.
-- **Diseño del póster (marco Miklós).** Tres paneles-mapa = las tres estructuras
-  (primaria/DEM, secundaria/vegetación, terciaria/ASP, esta última con la severidad del
-  fuego encima) + panel de síntesis = forest plot `09`. El fuego (NIAFED + FESM) es el
-  *evento* que actúa sobre las estructuras, no una cuarta estructura.
+- **Diseño del póster (marco Miklós) — figuras listas.** Tres paneles-mapa = las tres
+  estructuras (`10a` primaria/DEM, `10b` secundaria/vegetación, `10c` terciaria/ASP con la
+  severidad del fuego encima) + panel de síntesis = forest plot `09`; `10_poster_preview.png`
+  muestra el set ensamblado. El fuego (NIAFED + FESM) es el *evento* que actúa sobre las
+  estructuras, no una cuarta estructura. **Pendiente:** maquetar el póster final (texto,
+  título, créditos) a partir de estas figuras.
 - **Integración de las figuras `06a–d` y `09`.** Son prototipos en `outputs/figs`; aún no
   están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir cuáles
   entran al póster antes de integrarlas.

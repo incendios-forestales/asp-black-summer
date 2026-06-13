@@ -80,13 +80,13 @@ g <- ggplot(fp, aes(x = or, y = etiqueta, color = estructura)) +
   labs(
     title = "Las tres estructuras del paisaje frente al fuego",
     subtitle = "ASP de NSW · Black Summer 2019-2020 · efecto sobre la probabilidad de quemarse",
-    x = "Odds ratio por 1 desviación estándar  (escala log · 1 = sin efecto)",
+    x = "Factor de cambio en la probabilidad de quemarse · por 1 desviación estándar\n(escala log · 1 = sin efecto)",
     y = NULL,
     caption = paste(
       "Regresión logística cuasi-binomial por polígono ASP, ponderada por área (M1, script 08).",
-      "\nIC 95% = exp(coef ± 1.96·EE); no corrigen por autocorrelación espacial.",
-      "\nLectura: relieve y combustible (primaria + secundaria) mueven el fuego;",
-      "la categoría de protección (terciaria), por sí sola, no.")
+      "Factor = razón de momios (odds ratio) por 1 DE = exp(coef); IC 95% = exp(coef ± 1.96·EE), sin corregir por autocorrelación espacial.",
+      "Lectura: relieve y combustible (primaria + secundaria) mueven el fuego; la categoría de protección (terciaria), por sí sola, no.",
+      sep = "\n")
   ) +
   theme_minimal(base_size = 12) +
   theme(

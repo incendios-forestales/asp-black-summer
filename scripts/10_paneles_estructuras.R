@@ -93,7 +93,7 @@ gA <- ggplot() +
                        name = "Elevación\n(m s.n.m.)") +
   labs(title = "Primaria · relieve",
        subtitle = "Modelo de elevación (DEM) de Nueva Gales del Sur",
-       caption = "Fuente: DEM SRTM vía elevatr (≈ GA 1-second). EPSG:3577 (Australian Albers).") +
+       caption = "Fuente: DEM SRTM vía elevatr (~600 m, zoom 8). EPSG:3577 (Australian Albers).") +
   tema_panel(col_prim)
 guardar(gA, "10a_primaria_relieve")
 

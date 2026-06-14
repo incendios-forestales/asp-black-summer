@@ -144,7 +144,7 @@ gC <- ggplot() +
   labs(title = "Terciaria · manejo (ASP) × fuego",
        subtitle = "Áreas protegidas y severidad de Black Summer 2019-2020",
        caption = paste("Fuente: ASP = CAPAD 2020 (morado). Severidad = FESM 2019-20",
-                       "(NSW SEED). El fuego es el evento, no una estructura.")) +
+                       "(NSW SEED).")) +
   tema_panel(col_terc)
 guardar(gC, "10c_terciaria_asp_severidad")
 

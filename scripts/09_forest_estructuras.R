@@ -83,7 +83,7 @@ g <- ggplot(fp, aes(x = or, y = etiqueta, color = estructura)) +
     x = "Factor de cambio en la probabilidad de quemarse · por 1 desviación estándar\n(escala log · 1 = sin efecto)",
     y = NULL,
     caption = paste(
-      "Regresión logística cuasi-binomial (GLM) por polígono ASP, ponderada por área (M1, script 08).",
+      "Regresión logística cuasi-binomial (GLM) por polígono ASP, ponderada por área.",
       "Factor = razón de momios (odds ratio) por 1 DE = exp(coef); IC 95% = exp(coef ± 1.96·EE), sin corregir por autocorrelación espacial.",
       "Lectura: relieve y combustible (primaria + secundaria) mueven el fuego; la categoría de protección (terciaria), por sí sola, no.",
       sep = "\n")

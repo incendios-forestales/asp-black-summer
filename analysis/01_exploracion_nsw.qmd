@@ -201,6 +201,40 @@ Lectura del patrón observado — sujeta a validación disciplinar (la tabla es 
 - **VI (Sustainable Use)**, donde el manejo activo está explícitamente permitido, muestra una exposición marginal (0.2 %).
 - Severidad modal **Extrema** en Ia, II y III; **Moderada** en IV y VI; **Alta** en V. La severidad extrema se concentra en las categorías restrictivas.
 
+## Síntesis — bivariados y estructuras del paisaje
+
+Las siguientes figuras de síntesis (generadas por `scripts/06` y `scripts/09`) condensan los patrones anteriores: los mapas bivariados cruzan exposición y combustible contra la severidad por polígono ASP, el heatmap resume la tabla por categoría IUCN, y el forest plot ordena el efecto de cada estructura del paisaje (marco de Miklós) sobre la probabilidad de quemarse.
+
+```{r fig-06a}
+#| fig-cap: "Mapa bivariado **exposición × severidad** por polígono ASP (terciles). Eje de exposición = % del área protegida quemada; eje de severidad = % del área quemada en clases Alta+Extrema (FESM). El azul oscuro combina alta exposición y alta severidad."
+f <- here("outputs", "figs", "06a_bivariado_exposicion_severidad.png")
+if (file.exists(f)) knitr::include_graphics(f) else knitr::asis_output("_Figura faltante: ejecute `scripts/06_mapas_bivariados.R`._")
+```
+
+```{r fig-06b}
+#| fig-cap: "Mapa bivariado **eucalipto × severidad** por polígono ASP (terciles): % de eucalipto esclerófilo frente a % de severidad Alta+Extrema. Explora si el combustible esclerófilo coincide espacialmente con la severidad observada."
+f <- here("outputs", "figs", "06b_bivariado_eucalipto_severidad.png")
+if (file.exists(f)) knitr::include_graphics(f) else knitr::asis_output("_Figura faltante: ejecute `scripts/06_mapas_bivariados.R`._")
+```
+
+```{r fig-06c}
+#| fig-cap: "Heatmap-resumen por categoría IUCN: % quemado, % eucalipto esclerófilo y severidad Alta+Extrema. Sintetiza la tabla cruzada en una sola lectura visual."
+f <- here("outputs", "figs", "06c_heatmap_iucn_severidad.png")
+if (file.exists(f)) knitr::include_graphics(f) else knitr::asis_output("_Figura faltante: ejecute `scripts/06_mapas_bivariados.R`._")
+```
+
+```{r fig-06d}
+#| fig-cap: "% del área quemada por **estrictez de protección** (orden IUCN Ia→VI). Lollipop exploratorio; la asociación estrictez↔%quemado es débil y no significativa con n = 7 categorías (ver scripts 05/07)."
+f <- here("outputs", "figs", "06d_estrictez_quemado.png")
+if (file.exists(f)) knitr::include_graphics(f) else knitr::asis_output("_Figura faltante: ejecute `scripts/06_mapas_bivariados.R`._")
+```
+
+```{r fig-09}
+#| fig-cap: "Forest plot de síntesis (GLM cuasibinomial por polígono ASP, modelo M1): efecto de cada **estructura del paisaje** de Miklós —relieve (elevación, pendiente, northness), vegetación (% eucalipto) y manejo (estrictez IUCN)— sobre la probabilidad de quemarse. Los IC aún no corrigen autocorrelación espacial (pendiente metodológico)."
+f <- here("outputs", "figs", "09_forest_estructuras.png")
+if (file.exists(f)) knitr::include_graphics(f) else knitr::asis_output("_Figura faltante: ejecute `scripts/09_forest_estructuras.R`._")
+```
+
 ## Sanity checks
 
 ```{r checks}

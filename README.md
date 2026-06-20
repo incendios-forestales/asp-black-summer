@@ -147,9 +147,10 @@ python3 scripts/13_construir_proyecto_qgis.py  # estilos .qml + asp_black_summer
   muestra el set ensamblado. El fuego (NIAFED + FESM) es el *evento* que actúa sobre las
   estructuras, no una cuarta estructura. **Pendiente:** maquetar el póster final (texto,
   título, créditos) a partir de estas figuras.
-- **Integración de las figuras `06a–d` y `09`.** Son prototipos en `outputs/figs`; aún no
-  están enlazadas en la portada (`index.html`) ni en el reporte Quarto. Decidir cuáles
-  entran al póster antes de integrarlas.
+- **Integración de las figuras `06a–d` y `09` — implementada.** Enlazadas en la portada
+  (`index.html`, sección «Figuras de síntesis») y embebidas en el reporte Quarto (sección
+  «Síntesis — bivariados y estructuras del paisaje»). **Pendiente:** decidir cuáles entran
+  al póster final (ver el punto del diseño del póster).
 
 ## Reproducibilidad
 

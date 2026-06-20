@@ -98,6 +98,7 @@ Marco teórico: Miklós, L. et al. (2019). *Landscape as a Geosystem*. Springer 
 - `outputs/figs/09_forest_estructuras.png` — forest plot de síntesis: efecto de cada estructura del paisaje (relieve, vegetación, manejo) sobre la probabilidad de quemarse (script `09`).
 - `outputs/figs/10[a-c]_*.png` — tres paneles-mapa de las estructuras de Miklós para el póster (script `10`): `10a` relieve (DEM), `10b` vegetación (eucalipto esclerófilo), `10c` ASP × severidad del fuego. `outputs/figs/10_poster_preview.png` arma el set sobre el forest plot.
 - `data/processed/*.gpkg` y `*.tif` — capas listas para abrir en QGIS (incluye `nsw_dem.tif`, `nsw_slope.tif` y `nsw_northness.tif`).
+- `data/processed/asp_black_summer.qgz` — proyecto QGIS con las 11 capas precargadas y estilizadas (EPSG:3577), abre centrado en NSW (script `13`). El bundle `asp-black-summer-capas-qgis.zip` (no versionado) empaqueta el proyecto + datos + estilos para enviarlo y abrirlo en Windows sin configurar nada.
 
 Los scripts `05` y `07` no escriben archivos: imprimen en consola correlaciones de Spearman/Pearson (eucalipto↔%quemado y estrictez IUCN↔%quemado). Ambas asociaciones resultan **débiles y no significativas** (n = 7 categorías); son exploratorias, no inferenciales. El script `08` sube la unidad de análisis al **polígono ASP** (n de cientos) y ajusta un GLM cuasibinomial que controla por terreno (elevación, pendiente, orientación) y vegetación; el `09` lo resume en un forest plot agrupado por las tres estructuras de Miklós.
 
@@ -114,7 +115,15 @@ source("scripts/07_correlacion_estrictez_quemado.R") # Spearman estrictez IUCN v
 source("scripts/08_regresion_quemado.R")      # GLM cuasibinomial por polígono ASP, controla por terreno
 source("scripts/09_forest_estructuras.R")     # forest plot de síntesis agrupado por estructura (póster)
 source("scripts/10_paneles_estructuras.R")    # tres paneles-mapa de las estructuras (póster)
+source("scripts/12_exportar_capas_qgis.R")    # capas derivadas (gpkg/tif) para QGIS
 quarto::quarto_render("analysis/01_exploracion_nsw.qmd")
+```
+
+Para armar el proyecto QGIS y el bundle distribuible (fuera de R; solo requiere
+`python3` + GDAL CLI, no QGIS instalado):
+
+```bash
+python3 scripts/13_construir_proyecto_qgis.py  # estilos .qml + asp_black_summer.qgz + asp-black-summer-capas-qgis.zip
 ```
 
 ## Próximos pasos / pendientes

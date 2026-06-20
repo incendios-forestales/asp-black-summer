@@ -6,6 +6,9 @@ data/processed/
 data/external/
 data/*.zip
 
+# Bundle QGIS para distribución (producto de datos, ~287 MB) — no versionar
+asp-black-summer-capas-qgis.zip
+
 renv/library/
 renv/staging/
 renv/local/

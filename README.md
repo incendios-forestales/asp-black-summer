@@ -160,3 +160,4 @@ El instructivo que acompaña al bundle vive versionado en `assets/LEEME_QGIS.txt
 - Imagen Docker fijada: `rocker/geospatial:4.5.3`.
 - Paquetes R fijados: `renv.lock`.
 - Line endings normalizados: `.gitattributes` (interop Linux ↔ Windows).
+- Zona horaria del contenedor fijada vía `TZ` en `docker-compose.yml` (por defecto `America/Costa_Rica`), para que `date: today` del reporte Quarto feche en hora local y no genere diffs de fecha al re-renderizar.

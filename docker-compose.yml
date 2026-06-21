@@ -15,6 +15,10 @@ services:
       GROUPID: 1000
       ROOT: "true"
       DISABLE_AUTH: "false"
+      # Zona horaria local: sin esto el contenedor corre en UTC y `date: today`
+      # del reporte Quarto adelanta un día al renderizar por la tarde, generando
+      # un diff de fecha espurio. Ajustable desde el host con la var TZ.
+      TZ: ${TZ:-America/Costa_Rica}
     volumes:
       - .:/home/rstudio/project
       - renv-cache:/home/rstudio/.cache/R/renv

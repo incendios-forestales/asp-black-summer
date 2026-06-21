@@ -301,6 +301,14 @@ def write_project(layers):
   </mapcanvas>
   <projectlayers>{maplayers}</projectlayers>
   <layerorder>{order}</layerorder>
+  <!-- Sin este flag heredado QGIS NO lee el CRS del proyecto (lo deja vacío) ni
+       reproyecta al vuelo: las capas se dibujan en metros Albers crudos y, al
+       agregar un mapa base (EPSG:3857), aterrizan frente a Sudáfrica. -->
+  <properties>
+    <SpatialRefSys>
+      <ProjectionsEnabled type="int">1</ProjectionsEnabled>
+    </SpatialRefSys>
+  </properties>
 </qgis>
 """
     qgs_path = os.path.join(DP, "asp_black_summer.qgs")

@@ -20,6 +20,8 @@ import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DP = os.path.normpath(os.path.join(HERE, "..", "data", "processed"))
+# Plantillas estáticas versionadas (data/processed/ está en .gitignore).
+ASSETS = os.path.normpath(os.path.join(HERE, "..", "assets"))
 
 # Bloque CRS idéntico al que escribe QGIS 3.40 para EPSG:3577 (WKT2 + srsid 1535,
 # el id estable en la srs.db incorporada). Así QGIS lo lee nativo, sin avisos de
@@ -335,16 +337,20 @@ def write_bundle(layers):
         files += [L["file"], base + ".qml"]              # dato + estilo
         if L["kind"] == "raster" and os.path.exists(os.path.join(DP, L["file"] + ".aux.xml")):
             files.append(L["file"] + ".aux.xml")          # tablas de categorías
-    files += ["asp_black_summer.qgz", "LEEME_QGIS.txt"]
+    files.append("asp_black_summer.qgz")
+
+    # (origen, nombre en el zip). Los datos/estilos salen de DP; el LEEME es una
+    # plantilla versionada en assets/ (DP está en .gitignore).
+    members = [(os.path.join(DP, f), f) for f in files]
+    members.append((os.path.join(ASSETS, "LEEME_QGIS.txt"), "LEEME_QGIS.txt"))
 
     zip_path = os.path.join(root, "asp-black-summer-capas-qgis.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-        for fname in files:
-            src = os.path.join(DP, fname)
+        for src, arcname in members:
             if not os.path.exists(src):
                 raise RuntimeError("falta en el bundle: " + src)
-            z.write(src, os.path.join(folder, fname))
-    print("[zip] ", os.path.relpath(zip_path, root), f"({len(files)} archivos)")
+            z.write(src, os.path.join(folder, arcname))
+    print("[zip] ", os.path.relpath(zip_path, root), f"({len(members)} archivos)")
 
 
 if __name__ == "__main__":

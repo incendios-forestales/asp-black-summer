@@ -126,6 +126,9 @@ Para armar el proyecto QGIS y el bundle distribuible (fuera de R; solo requiere
 python3 scripts/13_construir_proyecto_qgis.py  # estilos .qml + asp_black_summer.qgz + asp-black-summer-capas-qgis.zip
 ```
 
+El instructivo que acompaña al bundle vive versionado en `assets/LEEME_QGIS.txt`
+(las salidas en `data/processed/` no se versionan).
+
 ## Próximos pasos / pendientes
 
 - **DEM (estructura primaria / relieve) — implementado.** `R/download_dem.R` baja el

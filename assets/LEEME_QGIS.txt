@@ -1,0 +1,91 @@
+============================================================
+  ASP BLACK SUMMER — CAPAS PARA QGIS
+============================================================
+
+Todas las capas comparten el mismo sistema de coordenadas:
+    GDA94 / Australian Albers — EPSG:3577 (en metros)
+por eso se superponen perfectamente en QGIS.
+
+------------------------------------------------------------
+CÓMO ABRIR
+------------------------------------------------------------
+OPCIÓN A (recomendada) — todo armado en un solo proyecto:
+    Doble clic en  asp_black_summer.qgz
+    (o en QGIS: Proyecto -> Abrir -> asp_black_summer.qgz)
+    Abre con las 11 capas ya cargadas y con estilos. Algunas
+    vienen apagadas para no saturar el mapa: actívalas con la
+    casilla en el panel de Capas.
+
+OPCIÓN B — cargar capas sueltas:
+    Arrastra los .gpkg / .tif al lienzo de QGIS. El estilo se
+    aplica solo (cada capa trae su archivo .qml al lado).
+
+IMPORTANTE: mantén TODOS los archivos juntos en la misma
+carpeta. El proyecto usa rutas relativas; si separas el .qgz
+de los datos, no los encuentra.
+
+------------------------------------------------------------
+AGREGAR UN MAPA BASE (OpenStreetMap, OpenFreeMap, etc.)
+------------------------------------------------------------
+Puedes sumar un mapa base de fondo: panel Navegador -> XYZ
+Tiles -> OpenStreetMap (doble clic). El proyecto trae la
+reproyección al vuelo activada, así que las capas se ubican
+solas sobre NSW aunque el mapa base use otro sistema (EPSG:3857).
+
+Si alguna vez ves las capas lejos (p. ej. frente a Sudáfrica),
+es señal de que se desactivó la reproyección al vuelo: revisa
+abajo a la derecha que el CRS del proyecto sea EPSG:3577.
+
+------------------------------------------------------------
+CAPAS BASE
+------------------------------------------------------------
+nsw_boundary.gpkg            Límite del estado de NSW.
+nsw_capad_2020.gpkg          Áreas protegidas (CAPAD 2020),
+                             1.099 polígonos, con categoría IUCN.
+nsw_niafed_black_summer.gpkg Perímetro quemado Black Summer
+                             2019-2020 (NIAFED).
+nsw_fesm_severity.tif        Severidad del fuego (FESM):
+                             0=sin quemar, 2=Baja, 3=Moderada,
+                             4=Alta, 5=Extrema.
+nsw_nvis_mvg.tif             Vegetación NVIS (Major Vegetation
+                             Groups). El .aux.xml lleva la tabla.
+nsw_dem.tif                  Elevación (modelo digital, metros).
+nsw_slope.tif                Pendiente.
+nsw_northness.tif            Northness (orientación N-S).
+
+------------------------------------------------------------
+CAPAS DERIVADAS (las que antes solo existían como figura PNG)
+------------------------------------------------------------
+asp_bivariado.gpkg           Polígonos ASP con estadística por
+                             polígono. Campos útiles:
+                               pct_burned  = % del ASP quemado
+                               sev_he      = % del área quemada
+                                             en severidad alta+extrema
+                               pct_euc     = % de eucalipto esclerófilo
+                               biv_expsev_key / _col  -> figura 06a
+                               biv_eucsev_key / _col  -> figura 06b
+                             (el estilo .qml colorea el bivariado 06a;
+                             para el 06b, en Propiedades de la capa ->
+                             Simbología, cambia el campo a biv_eucsev_key
+                             o usa el color guardado en biv_eucsev_col).
+
+asp_quemado_interseccion.gpkg  Intersección geométrica ASP x
+                             perímetro Black Summer = la porción de
+                             cada área protegida que ardió. Campo
+                             area_quemada_ha. Total: ~3.06 millones ha.
+
+eucalipto_en_asp.tif         NVIS reclasificado a presencia de
+                             eucalipto, recortado a las ASP:
+                               1 = Eucalipto esclerófilo
+                               2 = Mallee (eucalipto)
+
+------------------------------------------------------------
+SOBRE "JUNTAR LA INFO EN UNA SOLA FIGURA"
+------------------------------------------------------------
+El proyecto .qgz ya es esa figura combinada: severidad + áreas
+protegidas + perímetro del incendio superpuestos. Para componer
+una lámina final usa  Proyecto -> Nueva composición de impresión
+(Print Layout), donde se agregan título, leyenda, escala y norte.
+
+Generado desde el repositorio asp-black-summer
+(scripts/12_exportar_capas_qgis.R y scripts/13_construir_proyecto_qgis.py).
